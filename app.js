@@ -6,6 +6,7 @@ let workspace=null,currentFilter="Alle",installPrompt=null;
 const $=selector=>document.querySelector(selector);
 const escapeHtml=value=>String(value??"").replace(/[&<>'"]/g,char=>({"&":"&amp;","<":"&lt;",">":"&gt;","'":"&#39;",'"':"&quot;"}[char]));
 const slug=value=>value.toLowerCase().replaceAll(" ","-");
+const assigneeName=value=>value==="Codex"?"Moek (met Codex)":value;
 
 async function api(path,options={}){
   const headers={"content-type":"application/json",...(options.headers||{})};
@@ -50,7 +51,7 @@ function countdown(task){
 function taskHtml(task,detailed=false){
   const date=new Date(`${task.dueDate}T12:00:00`).toLocaleDateString("nl-NL",{day:"numeric",month:"short",year:"numeric"});
   const timer=countdown(task),done=task.status==="Goedgekeurd";
-  return `<article class="task-row"><i class="status-dot s-${slug(task.status)}"></i><div class="task-copy"><strong>${escapeHtml(task.title)}</strong><div class="meta"><span>${escapeHtml(task.assignee)}</span><span>${date}</span><span>${escapeHtml(task.category)}</span></div><div class="countdown ${timer.className}">${timer.text}</div>${detailed&&task.checkMethod?`<p class="check">Controle: ${escapeHtml(task.checkMethod)}</p>`:""}</div><div class="task-actions"><select class="status-select" data-id="${task.id}" aria-label="Status">${STATUSSES.map(status=>`<option ${status===task.status?"selected":""}>${status}</option>`).join("")}</select><button class="task-button extend" type="button" data-extend-id="${task.id}" data-due-date="${task.dueDate}">+ 7 dagen</button><button class="task-button complete" type="button" data-done-id="${task.id}" ${done?"disabled":""}>${done?"✓ Gedaan":"✓ Afvinken"}</button></div></article>`;
+  return `<article class="task-row"><i class="status-dot s-${slug(task.status)}"></i><div class="task-copy"><strong>${escapeHtml(task.title)}</strong><div class="meta"><span>${escapeHtml(assigneeName(task.assignee))}</span><span>${date}</span><span>${escapeHtml(task.category)}</span></div><div class="countdown ${timer.className}">${timer.text}</div>${detailed&&task.checkMethod?`<p class="check">Controle: ${escapeHtml(task.checkMethod)}</p>`:""}</div><div class="task-actions"><select class="status-select" data-id="${task.id}" aria-label="Status">${STATUSSES.map(status=>`<option ${status===task.status?"selected":""}>${status}</option>`).join("")}</select><button class="task-button extend" type="button" data-extend-id="${task.id}" data-due-date="${task.dueDate}">+ 7 dagen</button><button class="task-button complete" type="button" data-done-id="${task.id}" ${done?"disabled":""}>${done?"✓ Gedaan":"✓ Afvinken"}</button></div></article>`;
 }
 function messageHtml(message){const date=new Date(`${message.createdAt}Z`).toLocaleString("nl-NL",{day:"numeric",month:"short",hour:"2-digit",minute:"2-digit"});return `<article class="message"><div class="avatar ${slug(message.author)}">${escapeHtml(message.author[0])}</div><div><div class="message-head"><strong>${escapeHtml(message.author)}</strong><time>${date}</time></div><p>${escapeHtml(message.body)}</p></div></article>`}
 function empty(text){return `<div class="empty">${escapeHtml(text)}</div>`}
