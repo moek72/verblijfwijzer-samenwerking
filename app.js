@@ -37,11 +37,37 @@ function render(){
   $("#latest-messages").innerHTML=messages.slice(0,4).map(messageHtml).join("")||empty("Nog geen berichten.");
   renderTasks();$("#conversation").innerHTML=messages.map(messageHtml).join("")||empty("Nog geen berichten. Schrijf hieronder het eerste bericht.");bindStatusSelects();
 }
-function taskHtml(task,detailed=false){const date=new Date(`${task.dueDate}T12:00:00`).toLocaleDateString("nl-NL",{day:"numeric",month:"short",year:"numeric"});return `<article class="task-row"><i class="status-dot s-${slug(task.status)}"></i><div class="task-copy"><strong>${escapeHtml(task.title)}</strong><div class="meta"><span>${escapeHtml(task.assignee)}</span><span>${date}</span><span>${escapeHtml(task.category)}</span></div>${detailed&&task.checkMethod?`<p class="check">Controle: ${escapeHtml(task.checkMethod)}</p>`:""}</div><select class="status-select" data-id="${task.id}" aria-label="Status">${STATUSSES.map(status=>`<option ${status===task.status?"selected":""}>${status}</option>`).join("")}</select></article>`}
+function countdown(task){
+  if(task.status==="Goedgekeurd")return {text:"Afgerond",className:"done"};
+  const today=new Date();today.setHours(0,0,0,0);
+  const deadline=new Date(`${task.dueDate}T00:00:00`);
+  const days=Math.round((deadline-today)/86400000);
+  if(days===0)return {text:"Deadline vandaag",className:"today"};
+  if(days===1)return {text:"Nog 1 dag",className:"soon"};
+  if(days>1)return {text:`Nog ${days} dagen`,className:days<=7?"soon":""};
+  const late=Math.abs(days);return {text:`${late} ${late===1?"dag":"dagen"} te laat`,className:"late"};
+}
+function taskHtml(task,detailed=false){
+  const date=new Date(`${task.dueDate}T12:00:00`).toLocaleDateString("nl-NL",{day:"numeric",month:"short",year:"numeric"});
+  const timer=countdown(task),done=task.status==="Goedgekeurd";
+  return `<article class="task-row"><i class="status-dot s-${slug(task.status)}"></i><div class="task-copy"><strong>${escapeHtml(task.title)}</strong><div class="meta"><span>${escapeHtml(task.assignee)}</span><span>${date}</span><span>${escapeHtml(task.category)}</span></div><div class="countdown ${timer.className}">${timer.text}</div>${detailed&&task.checkMethod?`<p class="check">Controle: ${escapeHtml(task.checkMethod)}</p>`:""}</div><div class="task-actions"><select class="status-select" data-id="${task.id}" aria-label="Status">${STATUSSES.map(status=>`<option ${status===task.status?"selected":""}>${status}</option>`).join("")}</select><button class="task-button extend" type="button" data-extend-id="${task.id}" data-due-date="${task.dueDate}">+ 7 dagen</button><button class="task-button complete" type="button" data-done-id="${task.id}" ${done?"disabled":""}>${done?"✓ Gedaan":"✓ Afvinken"}</button></div></article>`;
+}
 function messageHtml(message){const date=new Date(`${message.createdAt}Z`).toLocaleString("nl-NL",{day:"numeric",month:"short",hour:"2-digit",minute:"2-digit"});return `<article class="message"><div class="avatar ${slug(message.author)}">${escapeHtml(message.author[0])}</div><div><div class="message-head"><strong>${escapeHtml(message.author)}</strong><time>${date}</time></div><p>${escapeHtml(message.body)}</p></div></article>`}
 function empty(text){return `<div class="empty">${escapeHtml(text)}</div>`}
 function renderTasks(){if(!workspace)return;const list=currentFilter==="Alle"?workspace.tasks:workspace.tasks.filter(t=>t.assignee===currentFilter);$("#task-list").innerHTML=list.map(task=>taskHtml(task,true)).join("")||empty("Geen actiepunten voor deze keuze.");bindStatusSelects()}
-function bindStatusSelects(){document.querySelectorAll(".status-select").forEach(select=>{select.onchange=async()=>{select.disabled=true;try{await api("/workspace",{method:"PATCH",body:JSON.stringify({id:Number(select.dataset.id),status:select.value})});await loadWorkspace();toast("Status bijgewerkt.")}catch(error){toast(error.message)}finally{select.disabled=false}}})}
+async function updateTask(button,change,message){
+  button.disabled=true;
+  try{await api("/workspace",{method:"PATCH",body:JSON.stringify(change)});await loadWorkspace();toast(message)}
+  catch(error){toast(error.message)}finally{button.disabled=false}
+}
+function bindStatusSelects(){
+  document.querySelectorAll(".status-select").forEach(select=>{select.onchange=()=>updateTask(select,{id:Number(select.dataset.id),status:select.value},"Status bijgewerkt.")});
+  document.querySelectorAll("[data-done-id]").forEach(button=>{button.onclick=()=>updateTask(button,{id:Number(button.dataset.doneId),status:"Goedgekeurd"},"Actiepunt afgevinkt.")});
+  document.querySelectorAll("[data-extend-id]").forEach(button=>{button.onclick=()=>{
+    const deadline=new Date(`${button.dataset.dueDate}T12:00:00`);deadline.setDate(deadline.getDate()+7);
+    updateTask(button,{id:Number(button.dataset.extendId),dueDate:deadline.toISOString().slice(0,10)},"Deadline met 7 dagen verlengd.");
+  }});
+}
 async function sendMessage(event){event.preventDefault();const form=event.currentTarget,body=form.elements.body.value.trim();if(!body)return;try{await api("/workspace",{method:"POST",body:JSON.stringify({type:"message",body})});form.reset();await loadWorkspace();toast("Bericht verstuurd.")}catch(error){toast(error.message)}}
 async function addTask(event){event.preventDefault();const form=event.currentTarget,values=Object.fromEntries(new FormData(form));try{await api("/workspace",{method:"POST",body:JSON.stringify({type:"task",...values})});form.reset();await loadWorkspace();toast("Actiepunt toegevoegd.")}catch(error){toast(error.message)}}
 function showPage(page){document.querySelectorAll(".page").forEach(section=>section.hidden=section.id!==`page-${page}`);document.querySelectorAll("#nav button").forEach(button=>button.classList.toggle("active",button.dataset.page===page));$("#page-title").textContent={overview:"Overzicht",tasks:"Actiepunten",messages:"Berichten",documents:"Documenten"}[page]}
