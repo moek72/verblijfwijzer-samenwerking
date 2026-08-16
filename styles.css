@@ -13,3 +13,33 @@
 
 /* Verborgen schermen mogen nooit door een display-regel zichtbaar worden. */
 [hidden]{display:none!important}
+
+/* Compacte telefoonweergave */
+@media(max-width:600px){
+  html,body{max-width:100%;overflow-x:hidden}
+  .app-shell,.sidebar,.content{width:100%;min-width:0}
+  .app-shell{display:block;overflow:hidden}
+  .sidebar{padding:14px 16px}
+  .sidebar>div:first-child{min-width:0}
+  nav{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));width:100%;max-width:100%;padding-bottom:2px;overflow:visible}
+  nav button{width:100%;padding:10px 8px;font-size:13px}
+  .content{padding:22px 14px}
+  .content>header{gap:12px;flex-wrap:wrap;margin-bottom:20px}
+  .content header h1{font-size:31px}
+  .header-actions{width:100%;justify-content:flex-start}
+  .hero-card{padding:24px 20px;gap:22px}
+  .hero-card h2{font-size:28px}
+  .panel,.panel.large{padding:18px}
+  .task-row{grid-template-columns:auto minmax(0,1fr)}
+  .task-actions{grid-column:2;width:100%;grid-template-columns:1fr 1fr}
+  .task-actions select{grid-column:1/-1}
+  .toolbar,.filters{min-width:0;width:100%}
+  .filters button{padding:7px 10px;font-size:12px}
+  .conversation{padding:10px 16px}
+  .composer{padding:14px}
+  .drive-card{padding:22px 18px}
+  .drive-card h2{font-size:27px;overflow-wrap:anywhere}
+  .documents{grid-template-columns:minmax(0,1fr);min-width:0}
+  .drive-card,.folder-guide{width:100%;min-width:0}
+  .link-button{width:100%;text-align:center}
+}
