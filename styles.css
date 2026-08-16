@@ -10,3 +10,6 @@
 .task-button{border:1px solid var(--line);border-radius:9px;padding:8px 10px;background:white;color:var(--ink);font-size:12px;font-weight:800;cursor:pointer}
 .task-button.extend{color:var(--orange)}.task-button.complete{border-color:var(--green);background:var(--green);color:white}.task-button:disabled{cursor:default;opacity:.6}
 @media(max-width:600px){.task-actions{grid-column:2}.task-row select{grid-column:auto}}
+
+/* Verborgen schermen mogen nooit door een display-regel zichtbaar worden. */
+[hidden]{display:none!important}
