@@ -1,0 +1,42 @@
+<!doctype html>
+<html lang="nl">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <meta name="theme-color" content="#17352f">
+  <meta name="description" content="De besloten samenwerkingsplek van Moek en Sunayna.">
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="icon" href="icons/verblijfwijzer-192.png">
+  <link rel="apple-touch-icon" href="icons/verblijfwijzer-192.png">
+  <link rel="stylesheet" href="styles.css">
+  <title>VerblijfWijzer Samenwerking</title>
+</head>
+<body>
+  <div id="offline" class="offline" hidden>Geen internet — wijzigingen worden niet verstuurd.</div>
+  <main id="login-view" class="login-page">
+    <section class="login-card">
+      <div class="brand-mark">VW</div><p class="eyebrow">VERBLIJFWIJZER</p><h1>Samen verder bouwen.</h1>
+      <p class="muted">De besloten werkplek van Moek en Sunayna.</p>
+      <form id="login-form" class="login-form">
+        <label>Wie ben je?<select id="login-role"><option>Moek</option><option>Sunayna</option></select></label>
+        <label>Pincode<input id="login-pin" type="password" autocomplete="current-password" placeholder="Vul de pincode in" required></label>
+        <p id="login-error" class="error" role="alert"></p><button class="primary" type="submit">Open de werkplek</button>
+      </form><p class="security-note">Na de eerste keer blijft dit toestel ingelogd.</p>
+    </section>
+  </main>
+  <div id="app-view" class="app-shell" hidden>
+    <aside class="sidebar"><div><div class="logo"><span>V</span><div><strong>VerblijfWijzer</strong><small>Samenwerking</small></div></div><nav id="nav"><button data-page="overview" class="active">Overzicht</button><button data-page="tasks">Actiepunten</button><button data-page="messages">Berichten <b id="message-count"></b></button><button data-page="documents">Documenten</button></nav></div><div class="profile"><div id="avatar" class="avatar">M</div><div><strong id="profile-name">Moek</strong><small>Ingelogd</small></div><button id="logout" title="Uitloggen" aria-label="Uitloggen">↗</button></div></aside>
+    <main class="content">
+      <header><div><p class="eyebrow">SAMENWERKPLEK</p><h1 id="page-title">Overzicht</h1></div><div class="header-actions"><button id="install" class="soft" hidden>Installeer app</button><div class="deadline"><small>Beoogde einddatum</small><strong>30 oktober 2026</strong></div></div></header>
+      <section id="page-overview" class="page">
+        <div class="hero-card"><div><p class="eyebrow">VAN CONCEPT NAAR PILOT</p><h2>Iedereen ziet wat de volgende stap is.</h2><p>Beslissingen, controles en voortgang op één plek.</p></div><div class="progress-ring" id="progress-ring"><span><strong id="progress">0%</strong><small>goedgekeurd</small></span></div></div>
+        <div class="stats"><article><small>Totaal</small><strong id="stat-total">0</strong><span>actiepunten</span></article><article><small>Bezig</small><strong id="stat-doing">0</strong><span>in uitvoering</span></article><article><small>Te controleren</small><strong id="stat-review">0</strong><span>wacht op review</span></article><article><small>Berichten</small><strong id="stat-messages">0</strong><span>in het logboek</span></article></div>
+        <div class="two-col"><div class="panel"><div class="panel-title"><h3>Eerstvolgende actiepunten</h3><button data-go="tasks">Alles bekijken</button></div><div id="next-tasks"></div></div><div class="panel"><div class="panel-title"><h3>Laatste berichten</h3><button data-go="messages">Open gesprek</button></div><div id="latest-messages"></div></div></div>
+      </section>
+      <section id="page-tasks" class="page" hidden><div class="panel large"><div class="toolbar"><div id="filters" class="filters"><button class="selected" data-filter="Alle">Alle</button><button data-filter="Moek">Moek</button><button data-filter="Sunayna">Sunayna</button><button data-filter="Codex">Codex</button></div></div><div id="task-list"></div><details class="add-box"><summary>+ Nieuw actiepunt toevoegen</summary><form id="task-form" class="grid-form"><label>Titel<input name="title" maxlength="180" required></label><label>Categorie<select name="category"><option>Juridische inhoud</option><option>Techniek</option><option>Onderzoek</option><option>Testen</option><option>Pilot</option><option>Overig</option></select></label><label>Voor wie?<select name="assignee"><option>Moek</option><option>Sunayna</option><option>Codex</option></select></label><label>Deadline<input name="dueDate" type="date" required></label><label class="wide">Hoe controleren we dit?<textarea name="checkMethod" rows="2" maxlength="500"></textarea></label><button class="primary" type="submit">Actiepunt opslaan</button></form></details></div></section>
+      <section id="page-messages" class="page" hidden><div class="messages-layout"><div class="panel message-panel"><div id="conversation" class="conversation"></div><form id="message-form" class="composer"><textarea name="body" rows="3" maxlength="2000" placeholder="Schrijf een bericht…" required></textarea><button class="primary">Versturen</button></form></div><aside class="side-note"><p class="eyebrow">AFSPRAAK</p><h3>Houd het praktisch</h3><p>Gebruik berichten voor besluiten en vragen. Maak van werk altijd een actiepunt met een datum.</p></aside></div></section>
+      <section id="page-documents" class="page" hidden><div class="documents"><div class="drive-card"><div class="drive-icon">▲</div><div><p class="eyebrow">GOOGLE DRIVE</p><h2>Gedeelde documentenmap</h2><p>Bewaar hier juridische bronnen, testzaken, versies en pilotfeedback.</p><a class="primary link-button" href="https://drive.google.com/drive/folders/1X8FWD5xzK50uTSj_eZykd7-Gwvm0-nkX" target="_blank" rel="noreferrer">Open Google Drive</a></div></div><div class="folder-guide"><h3>Mappen</h3><ol><li>Juridische bronnen</li><li>Beslisboom en teksten</li><li>50 testzaken</li><li>Pilotfeedback</li><li>Versies en besluiten</li></ol></div></div></section>
+    </main>
+  </div>
+  <div id="toast" class="toast" hidden></div><script src="app.js" defer></script>
+</body></html>
