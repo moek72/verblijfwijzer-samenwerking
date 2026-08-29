@@ -3,10 +3,23 @@ const TOKEN_KEY="vw_samenwerking_token";
 const STATUSSES=["Te doen","Bezig","Klaar voor controle","Goedgekeurd","Geblokkeerd"];
 let token=localStorage.getItem(TOKEN_KEY)||"";
 let workspace=null,currentFilter="Alle",installPrompt=null;
+const openTasks=new Set();
 const $=selector=>document.querySelector(selector);
 const escapeHtml=value=>String(value??"").replace(/[&<>'"]/g,char=>({"&":"&amp;","<":"&lt;",">":"&gt;","'":"&#39;",'"':"&quot;"}[char]));
 const slug=value=>value.toLowerCase().replaceAll(" ","-");
 const assigneeName=value=>value==="Codex"?"Moek (met Codex)":value;
+const TASK_GUIDANCE={
+  1:{steps:["Open het voorbereidingspakket bij Documenten.","Controleer of de eerste gebruiker iemand buiten Nederland is die bij een partner in Nederland wil wonen.","Bevestig welke partnerroutes binnen versie 1 vallen en noteer uitzonderingen bij Berichten."],link:["Open voorbereidingspakket","https://docs.google.com/document/d/1otzzUfGr_DP8ZiwptaRQXVYOJFMrEcMEXmjlfMmJHRQ/edit"]},
+  2:{steps:["Open het bronnenregister bij Documenten.","Controleer per IND-bron of deze bij de juiste route en beslisregel hoort.","Noteer ontbrekende wetgeving, rechtspraak of juridische passages bij Berichten."],link:["Open bronnenregister","https://docs.google.com/document/d/1H8xbwvaaqOt5psIptmrw8UdiJC6emgdPn0FTN8fxV4A/edit"]},
+  3:{steps:["Werk de technische vragenvolgorde uit vanuit de goedgekeurde productkeuzes.","Koppel iedere vertakking aan een veilige mogelijke uitkomst.","Laat twijfel altijd eindigen in ‘niet betrouwbaar vast te stellen’."],link:["Open beslisboom","https://docs.google.com/document/d/1cMXRimpTvGGXq8x_7pDzSuo_xcQp_7AKTm3E5cZYtqE/edit"]},
+  4:{steps:["Open de werkversie van de beslisboom.","Controleer iedere vraag, vertakking, stopregel en uitkomst op juridische juistheid.","Zet aanpassingen bij Berichten en vink dit punt pas af als de basis juridisch klopt."],link:["Controleer de beslisboom","https://docs.google.com/document/d/1cMXRimpTvGGXq8x_7pDzSuo_xcQp_7AKTm3E5cZYtqE/edit"]},
+  5:{steps:["Bouw de goedgekeurde beslisboom om tot een invulbare RouteCheck.","Toon voorwaarden als voldaan, onbekend of aandachtspunt.","Controleer de werking op telefoon en computer."]},
+  6:{steps:["Open eerst de opzet voor de 50 testzaken.","Controleer per zaak of de verwachte juridische uitkomst juist is.","Vergelijk die verwachting met de technische uitkomst en noteer ieder verschil."],link:["Open opzet testzaken","https://docs.google.com/document/d/1c_iwBBtgv4CrcGs2Qt8mJuioN9i-e_K0EXtkEI69SVM/edit"]},
+  7:{steps:["Test inloggen, navigeren en uitloggen op telefoon en computer.","Open een actiepunt, wijzig een status en stuur een testbericht.","Noteer fouten met apparaat, scherm en uitgevoerde stap bij Berichten."]},
+  8:{steps:["Maak een korte omschrijving van de gesloten proef.","Vraag maximaal 20 passende proefgebruikers en leg hun toezegging vast.","Deel de test pas nadat de juridische basis is goedgekeurd."]},
+  9:{steps:["Laat proefgebruikers de volledige check uitvoeren.","Verzamel onduidelijke vragen, verkeerde uitkomsten, fouten en betaalbereidheid.","Maak van iedere noodzakelijke verbetering een nieuw actiepunt."]},
+  10:{steps:["Controleer of er geen kritieke technische fout meer openstaat.","Laat bevestigen dat de juridische routes, teksten en bronnen actueel zijn.","Beslis daarna: doorgaan, eerst aanpassen of stoppen."]}
+};
 
 async function api(path,options={}){
   const headers={"content-type":"application/json",...(options.headers||{})};
@@ -50,8 +63,10 @@ function countdown(task){
 }
 function taskHtml(task,detailed=false){
   const date=new Date(`${task.dueDate}T12:00:00`).toLocaleDateString("nl-NL",{day:"numeric",month:"short",year:"numeric"});
-  const timer=countdown(task),done=task.status==="Goedgekeurd";
-  return `<article class="task-row"><i class="status-dot s-${slug(task.status)}"></i><div class="task-copy"><strong>${escapeHtml(task.title)}</strong><div class="meta"><span>${escapeHtml(assigneeName(task.assignee))}</span><span>${date}</span><span>${escapeHtml(task.category)}</span></div><div class="countdown ${timer.className}">${timer.text}</div>${detailed&&task.checkMethod?`<p class="check">Controle: ${escapeHtml(task.checkMethod)}</p>`:""}</div><div class="task-actions"><select class="status-select" data-id="${task.id}" aria-label="Status">${STATUSSES.map(status=>`<option ${status===task.status?"selected":""}>${status}</option>`).join("")}</select><button class="task-button extend" type="button" data-extend-id="${task.id}" data-due-date="${task.dueDate}">+ 7 dagen</button><button class="task-button complete" type="button" data-done-id="${task.id}" ${done?"disabled":""}>${done?"✓ Gedaan":"✓ Afvinken"}</button></div></article>`;
+  const timer=countdown(task),done=task.status==="Goedgekeurd",guide=TASK_GUIDANCE[task.id]||{steps:["Lees de omschrijving en de controlewijze.","Voer het actiepunt uit en zet vragen bij Berichten.","Vink het punt af wanneer de controle is geslaagd."]};
+  const isOpen=openTasks.has(task.id),detailId=`task-detail-${task.id}`;
+  const detail=`<div id="${detailId}" class="task-detail" ${isOpen?"":"hidden"}><h4>Wat moet je doen?</h4><ol>${guide.steps.map(step=>`<li>${escapeHtml(step)}</li>`).join("")}</ol>${task.checkMethod?`<p><strong>Wanneer is het klaar?</strong><br>${escapeHtml(task.checkMethod)}</p>`:""}${guide.link?`<a href="${guide.link[1]}" target="_blank" rel="noreferrer">${escapeHtml(guide.link[0])} →</a>`:""}</div>`;
+  return `<article class="task-row ${isOpen?"open":""}"><i class="status-dot s-${slug(task.status)}"></i><div class="task-copy"><button class="task-toggle" type="button" data-task-toggle="${task.id}" aria-expanded="${isOpen}" aria-controls="${detailId}"><span><strong>${escapeHtml(task.title)}</strong><small>${isOpen?"Verberg uitleg":"Bekijk wat je moet doen"}</small></span><b aria-hidden="true">⌄</b></button><div class="meta"><span>${escapeHtml(assigneeName(task.assignee))}</span><span>${date}</span><span>${escapeHtml(task.category)}</span></div><div class="countdown ${timer.className}">${timer.text}</div></div><div class="task-actions"><select class="status-select" data-id="${task.id}" aria-label="Status">${STATUSSES.map(status=>`<option ${status===task.status?"selected":""}>${status}</option>`).join("")}</select><button class="task-button extend" type="button" data-extend-id="${task.id}" data-due-date="${task.dueDate}">+ 7 dagen</button><button class="task-button complete" type="button" data-done-id="${task.id}" ${done?"disabled":""}>${done?"✓ Gedaan":"✓ Afvinken"}</button></div>${detail}</article>`;
 }
 function messageHtml(message){const date=new Date(`${message.createdAt}Z`).toLocaleString("nl-NL",{day:"numeric",month:"short",hour:"2-digit",minute:"2-digit"});return `<article class="message"><div class="avatar ${slug(message.author)}">${escapeHtml(message.author[0])}</div><div><div class="message-head"><strong>${escapeHtml(message.author)}</strong><time>${date}</time></div><p>${escapeHtml(message.body)}</p></div></article>`}
 function empty(text){return `<div class="empty">${escapeHtml(text)}</div>`}
@@ -62,6 +77,7 @@ async function updateTask(button,change,message){
   catch(error){toast(error.message)}finally{button.disabled=false}
 }
 function bindStatusSelects(){
+  document.querySelectorAll("[data-task-toggle]").forEach(button=>{button.onclick=()=>{const id=Number(button.dataset.taskToggle);openTasks.has(id)?openTasks.delete(id):openTasks.add(id);render()}});
   document.querySelectorAll(".status-select").forEach(select=>{select.onchange=()=>updateTask(select,{id:Number(select.dataset.id),status:select.value},"Status bijgewerkt.")});
   document.querySelectorAll("[data-done-id]").forEach(button=>{button.onclick=()=>updateTask(button,{id:Number(button.dataset.doneId),status:"Goedgekeurd"},"Actiepunt afgevinkt.")});
   document.querySelectorAll("[data-extend-id]").forEach(button=>{button.onclick=()=>{

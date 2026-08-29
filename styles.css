@@ -9,6 +9,8 @@
 .task-actions{display:grid;gap:7px}.task-actions select{grid-column:auto}
 .task-button{border:1px solid var(--line);border-radius:9px;padding:8px 10px;background:white;color:var(--ink);font-size:12px;font-weight:800;cursor:pointer}
 .task-button.extend{color:var(--orange)}.task-button.complete{border-color:var(--green);background:var(--green);color:white}.task-button:disabled{cursor:default;opacity:.6}
+.task-toggle{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;width:100%;padding:0;border:0;background:transparent;color:var(--ink);text-align:left;cursor:pointer}.task-toggle span{display:grid;gap:4px}.task-toggle strong{font-size:14px}.task-toggle small{color:var(--green);font-size:11px;font-weight:800}.task-toggle b{font-size:20px;line-height:1;transition:transform .18s ease}.task-row.open .task-toggle b{transform:rotate(180deg)}
+.task-detail{grid-column:2/-1;margin-top:2px;padding:17px 19px;border-radius:12px;background:#f1f6f2;color:var(--ink)}.task-detail h4{margin:0 0 9px;font:700 17px Georgia,serif}.task-detail ol{margin:0;padding-left:21px}.task-detail li{margin:7px 0;font-size:13px;line-height:1.5}.task-detail p{margin:13px 0 0;padding-top:12px;border-top:1px solid #d7e2da;color:var(--muted);font-size:13px;line-height:1.5}.task-detail a{display:inline-block;margin-top:13px;color:var(--green);font-size:13px;font-weight:800;text-decoration:none}
 @media(max-width:600px){.task-actions{grid-column:2}.task-row select{grid-column:auto}}
 
 /* Verborgen schermen mogen nooit door een display-regel zichtbaar worden. */
@@ -42,6 +44,7 @@
   .task-row{grid-template-columns:auto minmax(0,1fr)}
   .task-actions{grid-column:2;width:100%;grid-template-columns:1fr 1fr}
   .task-actions select{grid-column:1/-1}
+  .task-detail{grid-column:1/-1;padding:15px 16px}
   .toolbar,.filters{min-width:0;width:100%}
   .filters button{padding:7px 10px;font-size:12px}
   .conversation{padding:10px 16px}
